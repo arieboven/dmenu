@@ -783,14 +783,21 @@ main(int argc, char *argv[])
 			prompt = argv[++i];
 		else if (!strcmp(argv[i], "-fn"))  /* font or font set */
 			fonts[0] = argv[++i];
-		else if (!strcmp(argv[i], "-nb"))  /* normal background color */
+		else if (!strcmp(argv[i], "-nb")) { /* normal background color */
 			colors[SchemeNorm][ColBg] = argv[++i];
+			colors[SchemeNormHighlight][ColBg] = argv[++i]; }
 		else if (!strcmp(argv[i], "-nf"))  /* normal foreground color */
 			colors[SchemeNorm][ColFg] = argv[++i];
-		else if (!strcmp(argv[i], "-sb"))  /* selected background color */
+		else if (!strcmp(argv[i], "-sb")) { /* selected background color */
 			colors[SchemeSel][ColBg] = argv[++i];
+			colors[SchemeSelHighlight][ColBg] = argv[++i]; }
 		else if (!strcmp(argv[i], "-sf"))  /* selected foreground color */
 			colors[SchemeSel][ColFg] = argv[++i];
+		else if (!strcmp(argv[i], "-nh")) { /* normal highlight foreground color */
+			colors[SchemeNormHighlight][ColFg] = argv[++i];
+			colors[SchemeSelHighlight][ColFg] = argv[++i]; }
+		/* else if (!strcmp(argv[i], "-sh"))  /1* selected highlight foreground color *1/ */
+		/* 	colors[SchemeSelHighlight][ColFg] = argv[++i]; */
 		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
 			embed = argv[++i];
 		else
