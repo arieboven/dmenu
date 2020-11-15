@@ -750,7 +750,8 @@ static void
 usage(void)
 {
 	fputs("usage: dmenu [-bfiv] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
-	      "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]\n", stderr);
+	      "             [-nb color] [-nf color] [-sb color] [-sf color]\n"
+          "             [-hf color] [-nh color] [-sh color] [-w windowid]\n", stderr);
 	exit(1);
 }
 
@@ -759,6 +760,7 @@ main(int argc, char *argv[])
 {
 	XWindowAttributes wa;
 	int i, fast = 0;
+    char *color;
 
 	for (i = 1; i < argc; i++)
 		/* these options take no arguments */
@@ -784,20 +786,25 @@ main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "-fn"))  /* font or font set */
 			fonts[0] = argv[++i];
 		else if (!strcmp(argv[i], "-nb")) { /* normal background color */
-			colors[SchemeNorm][ColBg] = argv[++i];
-			colors[SchemeNormHighlight][ColBg] = argv[++i]; }
+            color = argv[++i];
+			colors[SchemeNorm][ColBg] = color; 
+            colors[SchemeNormHighlight][ColBg] = color; }
 		else if (!strcmp(argv[i], "-nf"))  /* normal foreground color */
 			colors[SchemeNorm][ColFg] = argv[++i];
 		else if (!strcmp(argv[i], "-sb")) { /* selected background color */
-			colors[SchemeSel][ColBg] = argv[++i];
-			colors[SchemeSelHighlight][ColBg] = argv[++i]; }
+            color = argv[++i];
+			colors[SchemeSel][ColBg] = color;
+            colors[SchemeSelHighlight][ColBg] = color; }
 		else if (!strcmp(argv[i], "-sf"))  /* selected foreground color */
 			colors[SchemeSel][ColFg] = argv[++i];
-		else if (!strcmp(argv[i], "-nh")) { /* normal highlight foreground color */
+		else if (!strcmp(argv[i], "-hf")) { /* highlight forground color */
+            color = argv[++i];
+			colors[SchemeNormHighlight][ColFg] = color;
+            colors[SchemeSelHighlight][ColFg] = color; }
+		else if (!strcmp(argv[i], "-nh"))  /* normal highlight foreground color */
 			colors[SchemeNormHighlight][ColFg] = argv[++i];
-			colors[SchemeSelHighlight][ColFg] = argv[++i]; }
-		/* else if (!strcmp(argv[i], "-sh"))  /1* selected highlight foreground color *1/ */
-		/* 	colors[SchemeSelHighlight][ColFg] = argv[++i]; */
+		else if (!strcmp(argv[i], "-sh"))  /* selected highlight foreground color */
+			colors[SchemeSelHighlight][ColFg] = argv[++i];
 		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
 			embed = argv[++i];
 		else
