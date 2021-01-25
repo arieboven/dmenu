@@ -28,16 +28,16 @@ Specify how dmenu with items will be displayed on monitor
 Set colors with Xresources.
 The availible options are:
 - `dmenu.font`
-- `dmenu.normbackground`
+- `dmenu.background`
 - `dmenu.normselforeground` *
-- `dmenu.normforeground`
+- `dmenu.foreground`
 - `dmenu.selbackground`
 - `dmenu.selforeground`
 - `dmenu.normhighlightforeground`
 - `dmenu.selhighlightforeground`
 - `dmenu.highlightforeground` *
 
-\* *The option `normselforeground` set de default foreground which override `normforeground` and `selforeground`. This is also true for `highlightforeground` which override `selnormhighlightforeground` and `selhighlightforeground`.*
+\* *The option `normselforeground` set de default foreground which override `foreground` and `selforeground`. This is also true for `highlightforeground` which override `selnormhighlightforeground` and `selhighlightforeground`.*
 
 ## Requirements
 

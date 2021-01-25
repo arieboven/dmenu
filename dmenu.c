@@ -826,14 +826,14 @@ readxresources(void) {
 			fonts[0] = strdup(xval.addr);
 		else
 			fonts[0] = strdup(fonts[0]);
-		if (XrmGetResource(xdb, "dmenu.normbackground", "*", &type, &xval)){
+		if (XrmGetResource(xdb, "dmenu.background", "*", &type, &xval)){
 			colors[SchemeNorm][ColBg] = strdup(xval.addr);
 			colors[SchemeNormHighlight][ColBg] = strdup(xval.addr);
         } else {
 			colors[SchemeNorm][ColBg] = strdup(colors[SchemeNorm][ColBg]);
 			colors[SchemeNormHighlight][ColBg] = strdup(colors[SchemeNormHighlight][ColBg]);
         }
-		if (XrmGetResource(xdb, "dmenu.normforeground", "*", &type, &xval))
+		if (XrmGetResource(xdb, "dmenu.foreground", "*", &type, &xval))
 			colors[SchemeNorm][ColFg] = strdup(xval.addr);
 		else
 			colors[SchemeNorm][ColFg] = strdup(colors[SchemeNorm][ColFg]);
