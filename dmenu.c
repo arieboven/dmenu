@@ -15,6 +15,7 @@
 #include <X11/extensions/Xinerama.h>
 #endif
 #include <X11/Xft/Xft.h>
+#include <X11/Xresource.h>
 
 #include "drw.h"
 #include "util.h"
@@ -55,6 +56,10 @@ static XIC xic;
 
 static Drw *drw;
 static Clr *scheme[SchemeLast];
+
+/* Temporary arrays to allow overriding xresources values */
+static char *colortemp[8];
+static char *tempfonts;
 
 #include "config.h"
 
@@ -687,8 +692,13 @@ setup(void)
 	int a, di, n, area = 0;
 #endif
 	/* init appearance */
-	for (j = 0; j < SchemeLast; j++)
-		scheme[j] = drw_scm_create(drw, colors[j], 2);
+	for (j = 0; j < SchemeLast; j++) {
+		scheme[j] = drw_scm_create(drw, (const char**)colors[j], 2);
+	}
+	for (j = 0; j < SchemeOut; ++j) {
+		for (i = 0; i < 2; ++i)
+			free(colors[j][i]);
+	}
 
 	clip = XInternAtom(dpy, "CLIPBOARD",   False);
 	utf8 = XInternAtom(dpy, "UTF8_STRING", False);
@@ -802,6 +812,63 @@ usage(void)
 	exit(1);
 }
 
+void
+readxresources(void) {
+	XrmInitialize();
+
+	char* xrm;
+	if ((xrm = XResourceManagerString(drw->dpy))) {
+		char *type;
+		XrmDatabase xdb = XrmGetStringDatabase(xrm);
+		XrmValue xval;
+
+		if (XrmGetResource(xdb, "dmenu.font", "*", &type, &xval))
+			fonts[0] = strdup(xval.addr);
+		else
+			fonts[0] = strdup(fonts[0]);
+		if (XrmGetResource(xdb, "dmenu.normbackground", "*", &type, &xval)){
+			colors[SchemeNorm][ColBg] = strdup(xval.addr);
+			colors[SchemeNormHighlight][ColBg] = strdup(xval.addr);
+        } else {
+			colors[SchemeNorm][ColBg] = strdup(colors[SchemeNorm][ColBg]);
+			colors[SchemeNormHighlight][ColBg] = strdup(colors[SchemeNormHighlight][ColBg]);
+        }
+		if (XrmGetResource(xdb, "dmenu.normforeground", "*", &type, &xval))
+			colors[SchemeNorm][ColFg] = strdup(xval.addr);
+		else
+			colors[SchemeNorm][ColFg] = strdup(colors[SchemeNorm][ColFg]);
+		if (XrmGetResource(xdb, "dmenu.selbackground", "*", &type, &xval)){
+			colors[SchemeSel][ColBg] = strdup(xval.addr);
+			colors[SchemeSelHighlight][ColBg] = strdup(xval.addr);
+        } else {
+			colors[SchemeSel][ColBg] = strdup(colors[SchemeSel][ColBg]);
+			colors[SchemeSelHighlight][ColBg] = strdup(colors[SchemeSelHighlight][ColBg]);
+        }
+		if (XrmGetResource(xdb, "dmenu.selforeground", "*", &type, &xval))
+			colors[SchemeSel][ColFg] = strdup(xval.addr);
+		else
+			colors[SchemeSel][ColFg] = strdup(colors[SchemeSel][ColFg]);
+		if (XrmGetResource(xdb, "dmenu.normhighlightforeground", "*", &type, &xval))
+			colors[SchemeSelHighlight][ColFg] = strdup(xval.addr);
+		else
+			colors[SchemeNormHighlight][ColFg] = strdup(colors[SchemeNormHighlight][ColFg]);
+		if (XrmGetResource(xdb, "dmenu.selhighlightforeground", "*", &type, &xval))
+			colors[SchemeSelHighlight][ColFg] = strdup(xval.addr);
+		else
+			colors[SchemeSelHighlight][ColFg] = strdup(colors[SchemeSelHighlight][ColFg]);
+		if (XrmGetResource(xdb, "dmenu.foreground", "*", &type, &xval)){
+			colors[SchemeSel][ColFg] = strdup(xval.addr);
+			colors[SchemeNorm][ColFg] = strdup(xval.addr);
+        }
+		if (XrmGetResource(xdb, "dmenu.highlightforeground", "*", &type, &xval)){
+			colors[SchemeSelHighlight][ColFg] = strdup(xval.addr);
+			colors[SchemeNormHighlight][ColFg] = strdup(xval.addr);
+        }
+
+		XrmDestroyDatabase(xdb);
+	}
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -839,27 +906,27 @@ main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "-p"))   /* adds prompt to left of input field */
 			prompt = argv[++i];
 		else if (!strcmp(argv[i], "-fn"))  /* font or font set */
-			fonts[0] = argv[++i];
+			tempfonts = argv[++i];
 		else if (!strcmp(argv[i], "-nb")) { /* normal background color */
             color = argv[++i];
-			colors[SchemeNorm][ColBg] = color; 
-            colors[SchemeNormHighlight][ColBg] = color; }
+			colortemp[0] = color; 
+            colortemp[4] = color; }
 		else if (!strcmp(argv[i], "-nf"))  /* normal foreground color */
-			colors[SchemeNorm][ColFg] = argv[++i];
+			colortemp[1] = argv[++i];
 		else if (!strcmp(argv[i], "-sb")) { /* selected background color */
             color = argv[++i];
-			colors[SchemeSel][ColBg] = color;
-            colors[SchemeSelHighlight][ColBg] = color; }
+			colortemp[2] = color;
+            colortemp[6] = color; }
 		else if (!strcmp(argv[i], "-sf"))  /* selected foreground color */
-			colors[SchemeSel][ColFg] = argv[++i];
+			colortemp[3] = argv[++i];
 		else if (!strcmp(argv[i], "-hf")) { /* highlight forground color */
             color = argv[++i];
-			colors[SchemeNormHighlight][ColFg] = color;
-            colors[SchemeSelHighlight][ColFg] = color; }
+			colortemp[5] = color;
+            colortemp[7] = color; }
 		else if (!strcmp(argv[i], "-nh"))  /* normal highlight foreground color */
-			colors[SchemeNormHighlight][ColFg] = argv[++i];
+			colortemp[5] = argv[++i];
 		else if (!strcmp(argv[i], "-sh"))  /* selected highlight foreground color */
-			colors[SchemeSelHighlight][ColFg] = argv[++i];
+			colortemp[7] = argv[++i];
 		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
 			embed = argv[++i];
 		else
@@ -877,8 +944,31 @@ main(int argc, char *argv[])
 		die("could not get embedding window attributes: 0x%lx",
 		    parentwin);
 	drw = drw_create(dpy, screen, root, wa.width, wa.height);
-	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
+	readxresources();
+	/* Now we check whether to override xresources with commandline parameters */
+	if ( tempfonts )
+	   fonts[0] = strdup(tempfonts);
+	if ( colortemp[0])
+	   colors[SchemeNorm][ColBg] = strdup(colortemp[0]);
+	if ( colortemp[1])
+	   colors[SchemeNorm][ColFg] = strdup(colortemp[1]);
+	if ( colortemp[2])
+	   colors[SchemeSel][ColBg]  = strdup(colortemp[2]);
+	if ( colortemp[3])
+	   colors[SchemeSel][ColFg]  = strdup(colortemp[3]);
+	if ( colortemp[4])
+	   colors[SchemeNormHighlight][ColBg] = strdup(colortemp[4]);
+	if ( colortemp[5])
+	   colors[SchemeNormHighlight][ColFg] = strdup(colortemp[5]);
+	if ( colortemp[6])
+	   colors[SchemeSelHighlight][ColBg]  = strdup(colortemp[6]);
+	if ( colortemp[7])
+	   colors[SchemeSelHighlight][ColFg]  = strdup(colortemp[7]);
+
+	if (!drw_fontset_create(drw, (const char**)fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
+
+	free(fonts[0]);
 	lrpad = drw->fonts->h;
 
 #ifdef __OpenBSD__
