@@ -856,7 +856,7 @@ readxresources(void) {
 			colors[SchemeSelHighlight][ColFg] = strdup(xval.addr);
 		else
 			colors[SchemeSelHighlight][ColFg] = strdup(colors[SchemeSelHighlight][ColFg]);
-		if (XrmGetResource(xdb, "dmenu.foreground", "*", &type, &xval)){
+		if (XrmGetResource(xdb, "dmenu.normselforeground", "*", &type, &xval)){
 			colors[SchemeSel][ColFg] = strdup(xval.addr);
 			colors[SchemeNorm][ColFg] = strdup(xval.addr);
         }
