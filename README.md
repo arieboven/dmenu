@@ -37,7 +37,7 @@ The availible options are:
 - `dmenu.selhighlightforeground`
 - `dmenu.highlightforeground` *
 
-\* *The option `normselforeground` set de default foreground which override `normforeground` and `selforeground`. This is also true for `highlightforeground` which override `selnormhighlightforeground` and `selhighlightforeground`.*
+\* *The option `normselforeground` set de default foreground which override `normforeground` and `selforeground`. This is also true for `highlightforeground` which override `normhighlightforeground` and `selhighlightforeground`.*
 
 ## Requirements
 
