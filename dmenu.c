@@ -790,8 +790,8 @@ setup(void)
 					break;
 
 		if (centered) {
-			mw = MIN(MAX(max_textw() + promptw, min_width), info[i].width);
-			x = info[i].x_org + ((info[i].width  - mw) / 2);
+			mw = MIN(MAX(max_textw() + promptw, min_width), info[i].width) - (border_width * 2);
+			x = info[i].x_org + ((info[i].width  - mw) / 2) - border_width;
 			y = info[i].y_org + ((info[i].height - mh) / 2);
 		} else {
 			x = info[i].x_org;
