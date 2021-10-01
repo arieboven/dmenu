@@ -102,7 +102,7 @@ max_textw(void)
 {
 	int len = 0;
 	for (struct item *item = items; item && item->text; item++)
-		len = MAX(TEXTW(item->text), len);
+		len = MAX(TEXTW(item->text) * (columns == 0 ? 1 : columns), len);
 	return len;
 }
 
@@ -397,6 +397,8 @@ keypress(XKeyEvent *ev)
 	int len;
 	KeySym ksym;
 	Status status;
+	int i, offscreen = 0;
+	struct item *tmpsel;
 
 	len = XmbLookupString(xic, ev, buf, sizeof buf, &ksym, &status);
 	switch (status) {
@@ -529,6 +531,27 @@ insert:
 		break;
 	case XK_Left:
 	case XK_KP_Left:
+		if (columns > 1) {
+			if (!sel)
+				return;
+			tmpsel = sel;
+			for (i = 0; i < lines; i++) {
+				if (!tmpsel->left || tmpsel->left->right != tmpsel) {
+					if (offscreen)
+						break;
+					return;
+				}
+				if (tmpsel == curr)
+					offscreen = 1;
+				tmpsel = tmpsel->left;
+			}
+			sel = tmpsel;
+			if (offscreen) {
+				curr = prev;
+				calcoffsets();
+			}
+			break;
+		}
 		if (cursor > 0 && (!sel || !sel->left || lines > 0)) {
 			cursor = nextrune(-1);
 			break;
@@ -569,6 +592,27 @@ insert:
 		break;
 	case XK_Right:
 	case XK_KP_Right:
+		if (columns > 1) {
+			if (!sel)
+				return;
+			tmpsel = sel;
+			for (i = 0; i < lines; i++) {
+				if (!tmpsel->right ||  tmpsel->right->left != tmpsel) {
+					if (offscreen)
+						break;
+					return;
+				}
+				tmpsel = tmpsel->right;
+				if (tmpsel == next)
+					offscreen = 1;
+			}
+			sel = tmpsel;
+			if (offscreen) {
+				curr = next;
+				calcoffsets();
+			}
+			break;
+		}
 		if (text[cursor] != '\0') {
 			cursor = nextrune(+1);
 			break;
@@ -817,7 +861,7 @@ setup(void)
 static void
 usage(void)
 {
-	fputs("usage: dmenu [-bcfiPv] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
+	fputs("usage: dmenu [-bcfiPv] [-l lines] [-g columns] [-p prompt] [-fn font] [-m monitor]\n"
 	      "             [-nb color] [-nf color] [-sb color] [-sf color]\n"
           "             [-hf color] [-nh color] [-sh color] [-w windowid]\n", stderr);
 	exit(1);
