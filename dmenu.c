@@ -692,11 +692,9 @@ readstdin(void)
 		if (!(items[i].text = strdup(buf)))
 			die("cannot strdup %zu bytes:", strlen(buf) + 1);
 		items[i].out = 0;
-		inputw = MAX(textw_clamp(buf, drw->w), inputw);
 	}
 	if (items)
 		items[i].text = NULL;
-	inputw = items ? inputw : 0;
 	lines = MIN(lines, i);
 }
 
@@ -742,12 +740,13 @@ static void
 setup(void)
 {
 	int x, y, i, j;
-	unsigned int du;
+	unsigned int du, tmp;
 	XSetWindowAttributes swa;
 	XIM xim;
 	Window w, dw, *dws;
 	XWindowAttributes wa;
 	XClassHint ch = {"dmenu", "dmenu"};
+	struct item *item;
 #ifdef XINERAMA
 	XineramaScreenInfo *info;
 	Window pw;
@@ -826,7 +825,13 @@ setup(void)
 	}
 
 	promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
-	inputw = MIN(inputw, mw / 3); /* input width: ~33% of monitor width */
+	for (item = items; item && item->text; ++item) {
+		if ((tmp = textw_clamp(item->text, mw / 3)) > inputw) {
+			if ((inputw = tmp) == mw / 3)
+				break; /* input width: ~33% of monitor width */
+		}
+	}
+
 	match();
 
 	/* create menu window */
